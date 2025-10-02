@@ -1,14 +1,29 @@
-function xor_encrypt(data, key)
-    local encrypted = {}
-    for i = 1, #data do
-        local byte = string.byte(data, i)
-        encrypted[i] = string.char(bit32.bxor(byte, key))
+function to_bytes(str)
+    local bytes = {}
+    for b in str:gmatch(".") do
+        for i = 1, #b do
+            table.insert(bytes, string.byte(b, i))
+        end
     end
-    return table.concat(encrypted)
+    return bytes
 end
 
-function encrypt(code,key)
-    local encryptedkey = xor_encrypt(key, "H8(@Gk3&dnub_!'Pw9cB'")
-    local encryptedcode = xor_encrypt(code, encryptedkey)
-    return encryptedcode
+function from_bytes(bytes)
+    local chars = {}
+    for i = 1, #bytes do
+        chars[i] = string.char(bytes[i])
+    end
+    return table.concat(chars)
+end
+
+function xor_utf8_encrypt(data, key)
+    local data_bytes = to_bytes(data)
+    local key_bytes = to_bytes(key)
+    local output = {}
+    local key_len = #key_bytes
+    for i = 1, #data_bytes do
+        local xor_byte = (data_bytes[i] ~ key_bytes[((i - 1) % key_len) + 1]) % 256
+        output[i] = string.format("%02X", xor_byte)
+    end
+    return table.concat(output)
 end
