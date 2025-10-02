@@ -1,34 +1,29 @@
---[[
-function xor_encrypt(data, key)
-    local encrypted = {}
-    for i = 1, #data do
-        local byte = string.byte(data, i)
-        encrypted[i] = string.char(bit32.bxor(byte, key))
+function to_bytes(str)
+    local bytes = {}
+    for b in str:gmatch(".") do
+        for i = 1, #b do
+            table.insert(bytes, string.byte(b, i))
+        end
     end
-    return table.concat(encrypted)
+    return bytes
 end
 
-function xor_decrypt(data, key)
-    local decrypted = {}
-    for i = 1, #data do
-        local byte = string.byte(data, i)
-        decrypted[i] = string.char(bit32.bxor(byte, key))
+function from_bytes(bytes)
+    local chars = {}
+    for i = 1, #bytes do
+        chars[i] = string.char(bytes[i])
     end
-    return table.concat(decrypted)
-end
-]]
-
-function xor_decrypt(data, key)
-    local decrypted = {}
-    for i = 1, #data do
-        local byte = string.byte(data, i)
-        decrypted[i] = string.char(bit32.bxor(byte, key))
-    end
-    return table.concat(decrypted)
+    return table.concat(chars)
 end
 
-return function(encryptedcode,encryptedkey)
-  local decryptedkey = xor_decrypt(encryptedkey,"H8(@Gk3&dnub_!'Pw9cB'")
-  local decryptedcode = xor_decrypt(encryptedcode, decryptedkey)
-  loadstring(decryptedcode)()
+function xor_utf8_decrypt(hex_data, key)
+    local key_bytes = to_bytes(key)
+    local output = {}
+    local key_len = #key_bytes
+    for i = 1, #hex_data, 2 do
+        local hex_byte = tonumber(hex_data:sub(i, i+1), 16)
+        local xor_byte = (hex_byte ~ key_bytes[((i - 1) // 2 % key_len) + 1]) % 256
+        output[#output + 1] = xor_byte
+    end
+    return from_bytes(output)
 end
